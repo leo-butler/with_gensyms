@@ -1,0 +1,64 @@
+/* -*- Mode: maxima; Package: MAXIMA -*- */
+/*
+ * $Id:$
+ *
+ * Author: Leo Butler (l_butler@users.sourcerforge.net)
+ *
+ * This file is Maxima code (http://maxima.sourceforge.net/)
+ * 
+ * It is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * This software is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this file. If not, see http://www.gnu.org/licenses/. 
+ */
+
+load("symbols.lisp");
+declare(gensym,feature) $
+
+wg_gensymize(x) := block([w], w:gensym(printf(false,"~a_",x)), apply('declare,[w,'gensym]), w);
+wg_make_binding(undef) := buildq([undef:undef],lambda([x,y],if is(y=undef) then rhs(x) else funmake(":",[rhs(x),y]))) $
+wg_check_op(oper,x) := if atom(x) or not(is(op(x)=oper)) then error("~a: expected operand ~a.",x,oper) else x;
+wg_atom_or_quote(x) := is(atom(x) or op(x)="'");
+
+(
+  with_gensyms(gensyms,[body]) ::= block([vals,undef,simp:false],
+    vals:map(lambda([x],if wg_atom_or_quote(x) then undef else rhs(wg_check_op(":",x))),gensyms),
+    gensyms:map(lambda([x],if atom(x) then x else lhs(x)),gensyms),
+    gensyms:map(lambda([x],funmake("=",[x,wg_gensymize(x)])),gensyms),
+    buildq([body:psubst(gensyms,body),gensyms:gensyms,v:map(wg_make_binding(undef),gensyms,vals)],
+      block(v,splice(body)))),
+  /* bootstrap with_gensyms by using it to define itself! */
+  apply(with_gensyms,['[gensyms,body,vals,undef,x,v],%%]))$
+
+wg_listofvars(x) := block([v],
+  v:unique(listofvars(x)),
+  for r in v do if not(atom(r)) then v:delete(r,v),
+  v:remove_maxima_symbols(v),
+  v);
+
+/* substitutes for := and ::= */
+
+kill(":>","::>") $
+infix(":>",180,20) $
+infix("::>",180,20) $
+(x ::> y) ::= block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x::=y))) $
+(x :>  y) ::> block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x :=y))) ;
+
+(
+  wg_redefun(fun,[vars]) := block([fd],
+    fd:if atom(fun) then apply('fundef,[fun]) else if member(op(fun),[":=","::="]) then fun else error("argument must be function name or definition"),
+    if vars=[] then vars:wg_listofvars(fd),
+    apply('with_gensyms,[flatten(append(args(lhs(fd)),vars)),fd])),
+  /* bootstrap wg_redefun by using it to define itself! */
+  wg_redefun('wg_redefun,'fd));
+map(wg_redefun,'[wg_gensymize,wg_make_binding,wg_check_op,wg_atom_or_quote,"::>",wg_listofvars]);
+
+/* end of with_gensyms.mac */

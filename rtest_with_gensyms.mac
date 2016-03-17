@@ -1,0 +1,55 @@
+/* -*- Mode: maxima; Package: MAXIMA -*- */
+/*
+ * $Id:$
+ *
+ * Author: Leo Butler (l_butler@users.sourcerforge.net)
+ *
+ * This file is Maxima code (http://maxima.sourceforge.net/)
+ * 
+ * It is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * This software is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this file. If not, see http://www.gnu.org/licenses/. 
+ */
+
+(load("with_gensyms.mac"), 'done) $
+done $
+
+with_gensyms([x:1,y:'b],
+  x+y);
+1+'b $
+
+with_gensyms([c:makelist(i,i,1,4)],
+  length(c));
+4 $
+
+with_gensyms([a:'a],a);
+a $
+
+with_gensyms([a,b,c],
+  a:1, b:2,
+  with_gensyms([a:a,b:b,c],
+    a+b));
+3 $
+
+(wg_redefun(g(x) := x), g(x));
+'x$
+
+(f(x) :> 0*x, simp:false, atom(last(fundef(f))));
+false;
+
+simp:true;
+true;
+
+kill(myf,g,f);
+done $
+
+/* end of rtest_with_gensyms.mac */
