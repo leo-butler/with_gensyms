@@ -20,37 +20,40 @@
  * along with this file. If not, see http://www.gnu.org/licenses/. 
  */
 
+wg_reversealias : true $
+
 load("symbols.lisp");
 declare(gensym,feature) $
 
-wg_gensymize(x) := block([w], w:gensym(printf(false,"~a_",x)), apply('declare,[w,'gensym]), w);
 wg_make_binding(undef) := buildq([undef:undef],lambda([x,y],if is(y=undef) then rhs(x) else funmake(":",[rhs(x),y]))) $
-wg_check_op(oper,x) := if atom(x) or not(is(op(x)=oper)) then error("~a: expected operand ~a.",x,oper) else x;
-wg_atom_or_quote(x) := is(atom(x) or op(x)="'");
+wg_check_op(oper,expr) := if atom(expr) or not(is(op(expr)=oper)) then error("~a: expected operand ~a.",expr,oper) else expr;
+wg_atom_or_quote(expr) := is(atom(expr) or op(expr)="'");
 
 (
-  with_gensyms(gensyms,[body]) ::= block([vals,undef,simp:false],
-    vals:map(lambda([x],if wg_atom_or_quote(x) then undef else rhs(wg_check_op(":",x))),gensyms),
-    gensyms:map(lambda([x],if atom(x) then x else lhs(x)),gensyms),
-    gensyms:map(lambda([x],funmake("=",[x,wg_gensymize(x)])),gensyms),
-    buildq([body:psubst(gensyms,body),gensyms:gensyms,v:map(wg_make_binding(undef),gensyms,vals)],
+  with_gensyms(bindings,[body]) ::= block([vals,undef,simp:false],
+    vals:map(lambda([x],if wg_atom_or_quote(x) then undef else rhs(wg_check_op(":",x))),bindings),
+    bindings:map(lambda([x],if atom(x) then x else lhs(x)),bindings),
+    bindings:map(lambda([x],funmake("=",[x,wg_gensymize(x)])),bindings),
+    buildq([body:psubst(bindings,body),bindings:bindings,v:map(wg_make_binding(undef),bindings,vals)],
       block(v,splice(body)))),
   /* bootstrap with_gensyms by using it to define itself! */
-  apply(with_gensyms,['[gensyms,body,vals,undef,x,v],%%]))$
+  apply(with_gensyms,['[bindings,body,vals,undef,x,v],%%]))$
 
-wg_listofvars(x) := block([v],
-  v:unique(listofvars(x)),
+wg_listofvars(expr,[listvars]) := block([v,listconstvars:false,listdummyvars:true],
+  if member('listconstvars,listvars) then listconstvars:true,
+  v:unique(listofvars(expr)),
   for r in v do if not(atom(r)) then v:delete(r,v),
   v:remove_maxima_symbols(v),
-  v);
+  v)$
+wg_funargs(expr) := if atom(expr) then (errcatch(wg_funargs(first(apply('fundef,[expr])))), if %%=[] then [] else first(%%)) else wg_listofvars(expr,'listconstvars) $
 
 /* substitutes for := and ::= */
 
 kill(":>","::>") $
 infix(":>",180,20) $
 infix("::>",180,20) $
-(x ::> y) ::= block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x::=y))) $
-(x :>  y) ::> block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x :=y))) ;
+(x ::> y) ::= block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_funargs(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x::=y))) $
+(x :>  y) ::> block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_funargs(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x :=y))) ;
 
 (
   wg_redefun(fun,[vars]) := block([fd],
@@ -59,6 +62,10 @@ infix("::>",180,20) $
     apply('with_gensyms,[flatten(append(args(lhs(fd)),vars)),fd])),
   /* bootstrap wg_redefun by using it to define itself! */
   wg_redefun('wg_redefun,'fd));
-map(wg_redefun,'[wg_gensymize,wg_make_binding,wg_check_op,wg_atom_or_quote,"::>",wg_listofvars]);
+map(wg_redefun,'[wg_make_binding,wg_check_op,wg_atom_or_quote,"::>",wg_listofvars,wg_funargs]);
+
+wg_lambda(vars,[body]) ::> buildq([vars:vars,body:body], with_gensyms(vars,lambda(vars,splice(body)))) $
+wg_block(vars,[body])  ::> buildq([vars:vars,body:body], with_gensyms(vars,block (vars,splice(body)))) $
 
 /* end of with_gensyms.mac */
+1;

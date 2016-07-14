@@ -24,8 +24,10 @@
 
 (defun maxima-symbol-p (x)
   (let ((n (symbol-name x)))
-    (and (> (length n) 2)  ;; single character symbols like $A should be discarded
-	 (char= (char n 0) #\$)))) 
+    (or (and (> (length n) 2)                                    ;; single character symbols like $A should be discarded, but true=t kept
+             (or (char= (char n 0) #\$) (char= (char n 0) #\%))) ;; only symbols beginning with $ or %
+        (eq x t)                                                 ;; don't forget true=t
+        (eq x nil))))                                            ;; or false=nil
 
 (declaim (special $symbols))
 
@@ -73,6 +75,17 @@ may be a symbol or mlist of symbols."
 	       (declare (ignore v))
 	       (push k s)) $symbols)
     (cons '(mlist simp) s)))
-	
+
+(defmfun $wg_gensymize (x)
+  (declare (special $wg_reversealias))
+  (assert (symbolp x))
+  ;; make function idempotent by returning a symbol produced by $wg_gensymize
+  (cond ((mfuncall '$featurep x '$gensym)
+	 x)
+	(t
+	 (let ((w (gensym (format nil "%~a_" (stripdollar x)))))
+	   (setf (get w 'reversealias) (if $wg_reversealias (make-symbol (format nil "%~a" x)) x))
+	   (mfuncall '$declare w '$gensym)
+	   w))))
   
 ;;/* end of symbols.lisp */
