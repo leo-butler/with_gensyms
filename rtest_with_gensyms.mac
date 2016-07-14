@@ -79,4 +79,45 @@ true;
 kill(myf,g,f);
 done $
 
+/* check idempotency */
+block([g,h,partition_bag],
+  local(partition_bag),
+  g : partition_bag(L,p) :> block([t:[],f:[]], if listp(L) then (map(lambda([x], apply('push,[x, if p(x)=true then 't else 'f])), L), map(reverse,[t,f])) else if not(atom(L)) then partition_bag(flatten(subst([matrix="[","{"="["],args(L))),p)),
+  h : subst([":="=":>"],g), h : ev(h,nouns),
+  is(h = g));
+true $
+
+length(wg_listofvars(fundef(wg_listofvars)));
+4;
+
+wg_listofvars([a,b,c,%pi,block,x]);
+[a,b,c,x];
+
+length(wg_funargs(wg_listofvars));
+2;
+
+length(wg_funargs(first(fundef(wg_listofvars))));
+2;
+
+/* declared constants are discarded by wg_listofvars, but included by wg_funargs
+   system constants like %pi are discarded because they are in $symbols */
+block([a,b,f], local(a,f), declare(a,constant),
+  [wg_listofvars([a,b,f,%e]), wg_funargs(f(a,b,%pi))]);
+[[b,f],[a,b]];
+
+map(maxima_symbolp,[%e,quit,constant,maxima_symbolp]);
+[true,true,true,false];
+
+(add_maxima_symbol(maxima_symbolp), map(maxima_symbolp,[%e,quit,constant,maxima_symbolp]));
+[true,true,true,true];
+
+remove_maxima_symbols([%e,quit,constant,maxima_symbolp]);
+[];
+
+(delete_maxima_symbols(maxima_symbolp), map(maxima_symbolp,[%e,quit,constant,maxima_symbolp]));
+[true,true,true,false];
+
+remove_maxima_symbols([%e,quit,constant,maxima_symbolp]);
+[maxima_symbolp];
+
 /* end of rtest_with_gensyms.mac */
