@@ -49,9 +49,8 @@
     s))
 
 (defmfun $maxima_symbolp (x)
-  (if (or (gethash x $symbols nil)
-	  (member x (mapcar #'caar (cdr $functions)) :test #'eq))
-      t nil))
+  (or (gethash x $symbols nil)
+      (member x (mapcar #'caar (cdr $functions)) :test #'eq)))
 
 (defmfun $remove_maxima_symbols (x)
   (assert (listp x))
