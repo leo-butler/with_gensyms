@@ -26,8 +26,7 @@
   (let ((n (symbol-name x)))
     (or (and (> (length n) 2)                                    ;; single character symbols like $A should be discarded, but true=t kept
              (or (char= (char n 0) #\$) (char= (char n 0) #\%))) ;; only symbols beginning with $ or %
-        (eq x t)                                                 ;; don't forget true=t
-        (eq x nil))))                                            ;; or false=nil
+	(cdr (mfuncall '$properties x)))))                       ;; any symbol with a non-trivial property list
 
 (declaim (special $symbols))
 
