@@ -23,6 +23,33 @@
 (load("with_gensyms.mac"), 'done) $
 done $
 
+maxima_symbolp(a);
+false $
+
+maxima_symbolp(b);
+false $
+
+maxima_symbolp(n);
+false $
+
+maxima_symbolp(true);
+true $
+
+maxima_symbolp(false);
+true $
+
+maxima_symbolp(lambda);
+true $
+
+maxima_symbolp(block);
+true $
+
+maxima_symbolp(?great);
+true $
+
+maxima_symbolp(?x);
+false $
+
 with_gensyms([x:1,y:'b],
   x+y);
 1+'b $
