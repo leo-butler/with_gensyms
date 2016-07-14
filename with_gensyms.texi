@@ -1,0 +1,363 @@
+\input texinfo
+
+@comment $Id@w{$}
+@comment %**start of header
+
+@setfilename with_gensyms.info
+@settitle with_gensyms
+@documentencoding UTF-8
+
+@ifinfo 
+@macro var {expr}
+<\expr\>
+@end macro
+@end ifinfo
+
+@include macros.texi
+@fonttextsize 10
+@c @evenfooting Leo T. Butler
+@c @oddfooting With_Gensyms Package
+@settitle With_Gensyms Package @mvalue{wg_version}
+@syncodeindex pg fn
+@syncodeindex vr fn
+@syncodeindex drv drf
+@exampleindent 1
+@comment %**end of header
+@copying
+This manual documents the @code{with_gensyms} package (version
+@mvalue{wg_version}, @mvalue{wg_last_updated}), a user-level package for
+the Maxima computer algebra system.
+
+Copyright @copyright{} 2016 Leo T. Butler.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled
+``GNU Free Documentation License''.
+@end quotation
+@end copying
+
+@dircategory Maxima
+@direntry
+* with_gensyms: (Maxima)Package.
+@end direntry
+
+@shorttitlepage With_Gensyms Package
+
+@titlepage
+@title With_Gensyms Package
+@subtitle A Maxima Package
+@subtitle for version @mvalue{wg_version}, @mvalue{wg_last_updated}
+
+@author Leo T. Butler (@email{leo.butler@@member.fsf.org})
+
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top, WITH_GENSYMS, (dir), (dir)
+@top With_Gensyms Package
+
+This is the @code{with_gensyms} package (version @mvalue{wg_version}, @mvalue{wg_last_updated}).
+@end ifnottex
+
+@menu
+* WITH_GENSYMS::
+* Code Listings::
+* Function and Variable index::
+* GNU Free Documentation License::
+@end menu
+
+@node WITH_GENSYMS, Code Listings, Top, Top
+@chapter WITH_GENSYMS
+
+@menu
+* Introduction to WITH_GENSYMS::
+* Examples::
+* Explanation::
+* Definitions for SYMBOLS.LISP::
+* Definitions for WITH_GENSYMS::
+@end menu
+
+@node Introduction to WITH_GENSYMS, Examples, WITH_GENSYMS, WITH_GENSYMS
+@section Introduction to WITH_GENSYMS
+
+@code{WITH_GENSYMS} is a @maxima{} package that provides a
+user-level drop-in replacement for the function defintion operator
+@code{:=}, and the macro defintion operator @code{::=}.
+
+In addition, it offers a macro, @code{with_gensyms}, as a
+general-purpose tool to re-write @maxima{} code using anonymous
+variable names, or gensyms.
+
+@node Examples, Explanation, Introduction to WITH_GENSYMS, WITH_GENSYMS
+@section Examples
+
+Here is a sample of @code{with_gensyms}. Consider the following example
+where @maxima{}'s scoping conventions introduce a difficult to
+understand bug.
+
+@c ===beg===
+@c f(x,n) := x[n]       /* x is a local parameter to f  */;
+@c f(h,1);
+@c f(x,3);
+@c f(x,2);
+@c x[2] : 2             /* x is now an undeclared array */;
+@c f(h,1);
+@c f(x,3);
+@c f(x,2);
+@c ===end===
+@example
+@end example
+
+The discrepancy in behavior is due to the creation of the undeclared
+array @code{x} in @il{5}. This introduces a global property on the
+symbol @code{x} that frustrates the expected behavior of @code{f}.
+
+@c ===beg===
+@c load(with_gensyms)$
+@c x[2] : 2             /* x is now an undeclared array */;
+@c f(x,n) :> x[n]       /* :> function definition operator */;
+@c f(h,1);
+@c f(x,3);
+@c f(x,2);
+@c ===end===
+@example
+@end example
+
+@node Explanation, Definitions for SYMBOLS.LISP, Examples, WITH_GENSYMS
+@section Explanation
+
+A simple cure to fix the problem encountered with @code{f} is to give
+the parameter @code{x} a more unique name. Something like
+
+@example
+f(my_local_variable_x_121423412,n) := my_local_variable_x_121423412[n];
+@end example
+
+There are two obvious flaws here: 1. the code is almost unreadable; and
+2. what is to prevent someone else (you, at another time) from choosing
+the same variable name.
+
+The @code{with_gensyms} package overcomes both problems by having
+@maxima{} automatically rewrite the code using gensyms, which are
+symbols (roughly, variable names) which are guaranteed to have no name
+clashes.
+
+@node Definitions for SYMBOLS.LISP, Definitions for WITH_GENSYMS, Explanation, WITH_GENSYMS
+@section Definitions for SYMBOLS.LISP
+
+@deffn {System Function} maxima-symbol-p (@var{x})
+
+Returns @true{} if the symbol-name of @var{x} has more than 2 characters or @var{x} is @true{}.
+
+@fundef{maxima-symbol-p}
+
+@end deffn
+
+@defvar symbols
+
+A Lisp hashtable used to look-up @maxima{} symbols. This is initialized when @file{symbols.lisp} is loaded, with the symbol table existing at that time. A user may add to this table. @xref{add_maxima_symbol}.
+
+@end defvar
+
+@anchor{add_maxima_symbol}
+@defun add_maxima_symbol (@var{x},[@var{s}])
+
+The default value of the hashtable @var{s} is @var{symbols}. If
+@var{x} is a symbol, add it to @var{s}; otherwise, if @var{x} is a
+list, iterate over it.
+
+@fundef{$add_maxima_symbol}
+
+@end defun
+
+@defun maxima_symbolp (@var{x})
+
+Return T if @var{x} is a key in @var{symbols} or if @var{x} is a function name listed in @var{functions}.
+
+@fundef{$maxima_symbolp}
+
+@end defun
+
+@defun remove_maxima_symbols (@var{x})
+
+Iterate over the list @var{x} and remove each entry that satisfies @code{maxima_symbolp}.
+
+@fundef{$remove_maxima_symbols}
+
+@end defun
+
+@defun delete_maxima_symbols (@var{x})
+
+If @var{x} is a symbol, remove it from @var{symbols}. If @var{x} is a @maxima{} list, map over it.
+
+@fundef{$delete_maxima_symbols}
+
+@end defun
+
+@defun maxima_symbols ()
+
+Creates a @maxima{} list of the current keys in @var{symbols}.
+
+@fundef{$maxima_symbols}
+
+@end defun
+
+@anchor{wg_gensymize}
+@defun wg_gensymize (@var{x})
+
+Returns a gensymized version of the symbol held by @var{x}, with the
+@maxima{} property @code{gensym}. By default, the printed representation
+of the gensym is not valid @maxima{} syntax.
+
+@maximaio
+load(with_gensyms)$
+wg_gensymize(x);
+apply('properties,[%]);
+@end example
+
+If @var{x} already has the @code{gensym} property, return @var{x}.
+
+@maximankio
+wg_gensymize(%o2);
+is(% = %o2);
+@end example
+
+The display property of the returned gensym is governed by the variable @var{wg_reversealias}.
+
+@maximankio
+wg_gensymize(y),  wg_reversealias:false;
+lisp_print(%);
+@end example
+
+@fundef{$wg_gensymize}
+
+@end defun
+
+@node Definitions for WITH_GENSYMS,  , Definitions for SYMBOLS.LISP, WITH_GENSYMS
+@section Definitions for WITH_GENSYMS
+
+
+@defopt wg_reversealias
+
+See the entry for @ref{wg_gensymize}.
+
+@end defopt
+
+@defvr {Feature} gensym
+
+A property of a symbol. Used by @code{wg_gensymize} to ensure idempotency of that function. See the entry for @ref{wg_gensymize}.
+
+@end defvr
+
+@defun wg_make_binding (@var{undef})
+
+Creates a function of two variables, @var{x} and @var{y}, where
+@var{x} is an assignment @code{a:b}. If @code{y = undef}, then return
+@code{b}; otherwise return the binding @code{b:y}.
+
+
+@maximankio
+map(wg_make_binding(undef), '[a:b,a:b], [undef,3]);
+@end example
+
+@end defun
+
+@defun wg_check_op (@var{oper},@var{expr})
+
+If @var{expr} is an atom or the operand of @var{expr} is not @var{oper}, signal an error; otherwise return @var{expr}.
+
+@end defun
+
+@defun wg_atom_or_quote (@var{expr})
+
+If @var{expr} is an atom or the operand is @code{'}, return @true{}; else return @false{}.
+
+@end defun
+
+@defmac with_gensyms (@var{bindings}, [@var{body}])
+
+Replace the variables in @var{bindings} with gensyms, and substitute these into @var{body}.
+
+@maximaio
+load(with_gensyms)$
+with_gensyms([x:1, y:2],
+                   ['[x,y], [x,y]]);
+with_gensyms([x,n], f(x) := a+x[n]);
+@end example
+
+Here is an implementation of a @code{lambda} function using @code{with_gensyms}:
+
+@findex wg_lambda
+
+@maximankio
+wg_lambda(vars,[body]) ::> buildq([vars:vars,body:body],
+                                  with_gensyms(
+                                   vars,
+                                   lambda(vars,
+                                          splice(body)))) $
+wg_lambda([x,y], if a=1 then x+1 else if a=2 then y+2 else a);
+apply(%o5,'[u,v]);
+apply(%o5,'[u,v]), a=1;
+apply(%o5,'[u,v]), a=2;
+@end example
+
+@end defmac
+
+@defun wg_listofvars (@var{expr})
+
+Extract the list of variables appearing in @var{expr}, after removing
+constants (such as @code{%e}, @code{%pi}, etc.), dummy variables (such
+as @code{%r1}, etc.) and variables listed in @code{symbols}.
+
+
+
+@end defun
+
+@node Code Listings, Function and Variable index, WITH_GENSYMS, Top
+@appendix Code Listings
+
+@menu
+* SYMBOLS.LISP::
+* WITH_GENSYMS.MAC::
+@end menu
+
+@node SYMBOLS.LISP, WITH_GENSYMS.MAC, Code Listings, Code Listings
+@section SYMBOLS.LISP
+
+@smallformat
+@verbatiminclude symbols.lisp
+@end smallformat
+
+@node WITH_GENSYMS.MAC,  , SYMBOLS.LISP, Code Listings
+@section WITH_GENSYMS.MAC
+
+@smallformat
+@verbatiminclude with_gensyms.mac
+@end smallformat
+
+@node Function and Variable index, GNU Free Documentation License, Code Listings, Top
+@appendix Function and Variable index
+@printindex fn
+@printindex vr
+
+@node GNU Free Documentation License,  , Function and Variable index, Top
+@appendix GNU Free Documentation License
+
+@include fdl.texi
+
+@bye
+
+@c Local Variables: 
+@c mode: texinfo
+@c TeX-master: t
+@c eval: (load-file "book.el")
+@c End: 
