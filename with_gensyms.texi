@@ -1,6 +1,7 @@
 \input texinfo
 
 @comment $Id@w{$}
+@comment Time-stamp: <2016-07-16 17:55:19>
 @comment %**start of header
 
 @setfilename with_gensyms.info
@@ -23,6 +24,12 @@
 @syncodeindex drv drf
 @exampleindent 1
 @comment %**end of header
+
+@comment load package
+@maximand
+load(with_gensyms)$
+@end ignore
+
 @copying
 This manual documents the @code{with_gensyms} package (version
 @mvalue{wg_version}, @mvalue{wg_last_updated}), a user-level package for
@@ -84,6 +91,7 @@ This is the @code{with_gensyms} package (version @mvalue{wg_version}, @mvalue{wg
 * Explanation::
 * Definitions for SYMBOLS.LISP::
 * Definitions for WITH_GENSYMS::
+* Acknowledgements::
 @end menu
 
 @node Introduction to WITH_GENSYMS, Examples, WITH_GENSYMS, WITH_GENSYMS
@@ -100,7 +108,7 @@ variable names, or gensyms.
 @node Examples, Explanation, Introduction to WITH_GENSYMS, WITH_GENSYMS
 @section Examples
 
-Here is a sample of @code{with_gensyms}. Consider the following example
+Here is a sample of @code{WITH_GENSYMS}. Consider the following example
 where @maxima{}'s scoping conventions introduce a difficult to
 understand bug.
 
@@ -143,10 +151,10 @@ f(my_local_variable_x_121423412,n) := my_local_variable_x_121423412[n];
 @end example
 
 There are two obvious flaws here: 1. the code is almost unreadable; and
-2. what is to prevent someone else (you, at another time) from choosing
+2. there is nothing to prevent someone else (you, at another time) from choosing
 the same variable name.
 
-The @code{with_gensyms} package overcomes both problems by having
+The @code{WITH_GENSYMS} package overcomes both problems by having
 @maxima{} automatically rewrite the code using gensyms, which are
 symbols (roughly, variable names) which are guaranteed to have no name
 clashes.
@@ -156,12 +164,14 @@ clashes.
 
 @deffn {System Function} maxima-symbol-p (@var{x})
 
-Returns @true{} if the symbol-name of @var{x} has more than 2 characters or @var{x} is @true{}.
+Returns @true{} if the symbol-name of @var{x} has more than 2 characters or @var{x} has a non-empty property list.
+Used to populate @var{symbols} when package is initially loaded.
 
 @fundef{maxima-symbol-p}
 
 @end deffn
 
+@anchor{symbols}
 @defvar symbols
 
 A Lisp hashtable used to look-up @maxima{} symbols. This is initialized when @file{symbols.lisp} is loaded, with the symbol table existing at that time. A user may add to this table. @xref{add_maxima_symbol}.
@@ -179,14 +189,16 @@ list, iterate over it.
 
 @end defun
 
+@anchor{maxima_symbolp}
 @defun maxima_symbolp (@var{x})
 
-Return T if @var{x} is a key in @var{symbols} or if @var{x} is a function name listed in @var{functions}.
+Return @true{} if @var{x} is a key in @var{symbols} or if @var{x} is a function name listed in @var{functions}.
 
 @fundef{$maxima_symbolp}
 
 @end defun
 
+@anchor{remove_maxima_symbols}
 @defun remove_maxima_symbols (@var{x})
 
 Iterate over the list @var{x} and remove each entry that satisfies @code{maxima_symbolp}.
@@ -195,6 +207,7 @@ Iterate over the list @var{x} and remove each entry that satisfies @code{maxima_
 
 @end defun
 
+@anchor{delete_maxima_symbols}
 @defun delete_maxima_symbols (@var{x})
 
 If @var{x} is a symbol, remove it from @var{symbols}. If @var{x} is a @maxima{} list, map over it.
@@ -203,6 +216,7 @@ If @var{x} is a symbol, remove it from @var{symbols}. If @var{x} is a @maxima{} 
 
 @end defun
 
+@anchor{maxima_symbols}
 @defun maxima_symbols ()
 
 Creates a @maxima{} list of the current keys in @var{symbols}.
@@ -242,7 +256,7 @@ lisp_print(%);
 
 @end defun
 
-@node Definitions for WITH_GENSYMS,  , Definitions for SYMBOLS.LISP, WITH_GENSYMS
+@node Definitions for WITH_GENSYMS, Acknowledgements, Definitions for SYMBOLS.LISP, WITH_GENSYMS
 @section Definitions for WITH_GENSYMS
 
 
@@ -258,6 +272,7 @@ A property of a symbol. Used by @code{wg_gensymize} to ensure idempotency of tha
 
 @end defvr
 
+@anchor{wg_make_binding}
 @defun wg_make_binding (@var{undef})
 
 Creates a function of two variables, @var{x} and @var{y}, where
@@ -271,18 +286,21 @@ map(wg_make_binding(undef), '[a:b,a:b], [undef,3]);
 
 @end defun
 
+@anchor{wg_check_op}
 @defun wg_check_op (@var{oper},@var{expr})
 
 If @var{expr} is an atom or the operand of @var{expr} is not @var{oper}, signal an error; otherwise return @var{expr}.
 
 @end defun
 
+@anchor{wg_atom_or_quote}
 @defun wg_atom_or_quote (@var{expr})
 
 If @var{expr} is an atom or the operand is @code{'}, return @true{}; else return @false{}.
 
 @end defun
 
+@anchor{with_gensyms}
 @defmac with_gensyms (@var{bindings}, [@var{body}])
 
 Replace the variables in @var{bindings} with gensyms, and substitute these into @var{body}.
@@ -299,12 +317,12 @@ Here is an implementation of a @code{lambda} function using @code{with_gensyms}:
 @findex wg_lambda
 
 @maximankio
-wg_lambda(vars,[body]) ::> buildq([vars:vars,body:body],
-                                  with_gensyms(
-                                   vars,
-                                   lambda(vars,
-                                          splice(body)))) $
-wg_lambda([x,y], if a=1 then x+1 else if a=2 then y+2 else a);
+wg_lambda1(vars,[body]) ::> buildq([vars:vars,body:body],
+                                   with_gensyms(
+                                    vars,
+                                    lambda(vars,
+                                           splice(body)))) $
+wg_lambda1([x,y], if a=1 then x+1 else if a=2 then y+2 else a);
 apply(%o5,'[u,v]);
 apply(%o5,'[u,v]), a=1;
 apply(%o5,'[u,v]), a=2;
@@ -312,15 +330,89 @@ apply(%o5,'[u,v]), a=2;
 
 @end defmac
 
-@defun wg_listofvars (@var{expr})
+@anchor{wg_listofvars}
+@defun wg_listofvars (@var{expr},[@var{listvars}])
 
 Extract the list of variables appearing in @var{expr}, after removing
-constants (such as @code{%e}, @code{%pi}, etc.), dummy variables (such
-as @code{%r1}, etc.) and variables listed in @code{symbols}.
+constants (such as @code{%e}, @code{%pi}, etc.) and variables listed in
+@code{symbols}. Dummy variables (such as @code{%r1}, etc.) are included.
 
+If @var{listvars} contains @code{listconstvars}, then constants are included.
 
+@maximankio
+declare(π,constant) $
+f(x,y) := for i from 1 thru 10 do x+i*π*y $
+wg_listofvars(%i10);
+wg_listofvars(%i10,'listconstvars);
+@end example
 
 @end defun
+
+@anchor{wg_funargs}
+@defun wg_funargs (@var{expr})
+
+If @var{expr} is an atom, apply @code{wg_funargs} to the lefthand side
+of the function definition of @var{expr}; otherwise, return the result
+of @code{wg_listofvars(expr, 'listconstvars)}.
+
+@maximankio
+wg_funargs(wg_listofvars);
+wg_funargs(lhs(%i10));
+@end example
+
+@end defun
+
+@anchor{wg_lambda}
+@defmac wg_lambda (@var{vars}, [@var{body}])
+
+Create a gensymized @code{lambda} function.
+
+@maximaio
+load(with_gensyms) $
+wg_lambda([x,y], if a=1 then x+1 else if a=2 then y+2 else a);
+apply(%o2,'[u,v]);
+apply(%o2,'[u,v]), a=1;
+apply(%o2,'[u,v]), a=2;
+@end example
+
+@xref{with_gensyms}.
+
+@end defmac
+
+@anchor{wg_block}
+@defmac wg_block (bindings, [@var{body}])
+
+Create a gensymized @code{block}. An alias for @code{with_gensyms}.
+
+@maximankio
+macroexpand(
+        wg_block([x:b,y:4], 
+        if a=1 then x+1 else if a=2 then y+2 else a));
+macroexpand(
+        with_gensyms([x:b,y:4], 
+        if a=1 then x+1 else if a=2 then y+2 else a));
+@end example
+
+@end defmac
+
+
+@anchor{:>}
+@defmac :>
+
+Function definition operator. See @ref{Examples}.
+
+@end defmac
+
+
+
+@node Acknowledgements,  , Definitions for WITH_GENSYMS, WITH_GENSYMS
+@section Acknowledgements
+
+
+Thanks to Robert Dodier. His code for
+@url{http://article.gmane.org/gmane.comp.mathematics.maxima.general/44007/match=blex
+,,@code{blex}}, written in Lisp, inspired the composition of
+@code{with_gensyms} in @maxima{} and its extension to this package.
 
 @node Code Listings, Function and Variable index, WITH_GENSYMS, Top
 @appendix Code Listings
@@ -328,6 +420,7 @@ as @code{%r1}, etc.) and variables listed in @code{symbols}.
 @menu
 * SYMBOLS.LISP::
 * WITH_GENSYMS.MAC::
+* RTEST_WITH_GENSYMS.MAC::
 @end menu
 
 @node SYMBOLS.LISP, WITH_GENSYMS.MAC, Code Listings, Code Listings
@@ -337,11 +430,18 @@ as @code{%r1}, etc.) and variables listed in @code{symbols}.
 @verbatiminclude symbols.lisp
 @end smallformat
 
-@node WITH_GENSYMS.MAC,  , SYMBOLS.LISP, Code Listings
+@node WITH_GENSYMS.MAC, RTEST_WITH_GENSYMS.MAC, SYMBOLS.LISP, Code Listings
 @section WITH_GENSYMS.MAC
 
 @smallformat
 @verbatiminclude with_gensyms.mac
+@end smallformat
+
+@node RTEST_WITH_GENSYMS.MAC,  , WITH_GENSYMS.MAC, Code Listings
+@section RTEST_WITH_GENSYMS.MAC
+
+@smallformat
+@verbatiminclude rtest_with_gensyms.mac
 @end smallformat
 
 @node Function and Variable index, GNU Free Documentation License, Code Listings, Top
@@ -359,5 +459,6 @@ as @code{%r1}, etc.) and variables listed in @code{symbols}.
 @c Local Variables: 
 @c mode: texinfo
 @c TeX-master: t
+@c time-stamp-format: "%:y-%02m-%02d %02H:%02M:%02S"
 @c eval: (load-file "book.el")
 @c End: 
