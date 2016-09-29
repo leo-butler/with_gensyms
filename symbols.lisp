@@ -19,6 +19,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this file. If not, see http://www.gnu.org/licenses/. 
 ;;
+;; Time-stamp: <2016-09-29 09:15:56>
 
 (in-package :maxima)
 
@@ -29,6 +30,7 @@
 	(cdr (mfuncall '$properties x)))))                       ;; any symbol with a non-trivial property list
 
 (declaim (special $symbols))
+(defmvar $wg_reversealias t)
 
 (defmfun $add_maxima_symbol (x &optional (s $symbols))
   (assert (or (symbolp x) ($listp x)))
@@ -85,5 +87,8 @@ may be a symbol or mlist of symbols."
 	   (setf (get w 'reversealias) (if $wg_reversealias (make-symbol (format nil "%~a" x)) x))
 	   (mfuncall '$declare w '$gensym)
 	   w))))
-  
+
+;; Local Variables:
+;; time-stamp-format: "%:y-%02m-%02d %02H:%02M:%02S"
+;; End:
 ;;/* end of symbols.lisp */
