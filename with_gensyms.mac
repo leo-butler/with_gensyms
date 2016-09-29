@@ -20,7 +20,19 @@
  * along with this file. If not, see http://www.gnu.org/licenses/. 
  */
 
-wg_reversealias : true $
+define_constant('const,val):=(
+  buildq([const:const,val:val],
+    block([err],
+      err:lambda([y],error('const," is a constant.")),
+      if apply(constantp,['const])
+      then apply(err,[const]),
+      define_variable(const,val,any_check),
+      qput(const,err,value_check),
+      declare(const,constant))),ev(%%),const)$
+
+if symbolp(wg_version) then (
+define_constant(wg_version, "0.1.0"),
+define_constant(wg_last_updated, substring("Time-stamp: <2016-09-29 09:16:07>",14,14+10)))$
 
 load("symbols.lisp");
 declare(gensym,feature) $
@@ -65,7 +77,13 @@ infix("::>",180,20) $
 map(wg_redefun,'[wg_make_binding,wg_check_op,wg_atom_or_quote,"::>",wg_listofvars,wg_funargs]);
 
 wg_lambda(vars,[body]) ::> buildq([vars:vars,body:body], with_gensyms(vars,lambda(vars,splice(body)))) $
-wg_block(vars,[body])  ::> buildq([vars:vars,body:body], with_gensyms(vars,block (vars,splice(body)))) $
+alias(wg_block,with_gensyms) $
 
+/*
+Local Variables:
+time-stamp-format: "%:y-%02m-%02d %02H:%02M:%02S"
+End:
+*/
 /* end of with_gensyms.mac */
 1;
+
