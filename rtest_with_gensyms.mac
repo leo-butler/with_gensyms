@@ -18,6 +18,8 @@
  * 
  * You should have received a copy of the GNU General Public License
  * along with this file. If not, see http://www.gnu.org/licenses/. 
+ *
+ * Time-stamp: <2016-07-15 11:40:07>
  */
 
 (load("with_gensyms.mac"), 'done) $
@@ -119,5 +121,11 @@ remove_maxima_symbols([%e,quit,constant,maxima_symbolp]);
 
 remove_maxima_symbols([%e,quit,constant,maxima_symbolp]);
 [maxima_symbolp];
+
+/*
+Local Variables:
+time-stamp-format: "%:y-%02m-%02d %02H:%02M:%02S"
+End:
+*/
 
 /* end of rtest_with_gensyms.mac */
