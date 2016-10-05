@@ -1,7 +1,7 @@
 \input texinfo
 
 @comment $Id@w{$}
-@comment Time-stamp: <2016-10-05 12:24:53>
+@comment Time-stamp: <2016-10-05 16:31:44>
 @comment %**start of header
 
 @setfilename with_gensyms.info
@@ -57,7 +57,7 @@ Texts.  A copy of the license is included in the section entitled
 @titlepage
 @title With_Gensyms Package
 @subtitle A Maxima Package
-@subtitle for version @mvalue{wg_version}, @mvalue{wg_last_updated}
+@subtitle version @mvalue{wg_version}, @mvalue{wg_last_updated}
 
 @author Leo T. Butler (@email{leo.butler@@member.fsf.org})
 
@@ -86,6 +86,7 @@ This is the @code{with_gensyms} package (version @mvalue{wg_version}, @mvalue{wg
 @chapter WITH_GENSYMS
 
 @menu
+* Obtaining an up-to-date copy::
 * Introduction to WITH_GENSYMS::
 * Examples::
 * Explanation::
@@ -94,7 +95,12 @@ This is the @code{with_gensyms} package (version @mvalue{wg_version}, @mvalue{wg
 * Acknowledgements::
 @end menu
 
-@node Introduction to WITH_GENSYMS, Examples, WITH_GENSYMS, WITH_GENSYMS
+@node Obtaining an up-to-date copy, Introduction to WITH_GENSYMS, WITH_GENSYMS, WITH_GENSYMS
+@section Obtaining an up-to-date copy
+
+An up-to-date copy may be found at @url{https://github.com/leo-butler/with_gensyms/}.
+
+@node Introduction to WITH_GENSYMS, Examples, Obtaining an up-to-date copy, WITH_GENSYMS
 @section Introduction to WITH_GENSYMS
 
 @code{WITH_GENSYMS} is a @maxima{} package that provides a
