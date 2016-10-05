@@ -29,54 +29,76 @@ define_constant('const,val):=(
       define_variable(const,val,any_check),
       qput(const,err,value_check),
       declare(const,constant))),ev(%%),const)$
-
-if symbolp(wg_version) then (
-define_constant(wg_version, "0.1.0"),
-define_constant(wg_last_updated, substring("Time-stamp: <2016-09-29 09:16:07>",14,14+10)))$
+if symbolp(wg_version)
+then (define_constant(wg_version,"0.1.0"),
+  define_constant(wg_last_updated,
+    substring("Time-stamp: <2016-10-05 12:11:46>",14,
+      14+10)))$
 
 load("symbols.lisp");
 declare(gensym,feature) $
 
-wg_make_binding(undef) := buildq([undef:undef],lambda([x,y],if is(y=undef) then rhs(x) else funmake(":",[rhs(x),y]))) $
-wg_check_op(oper,expr) := if atom(expr) or not(is(op(expr)=oper)) then error("~a: expected operand ~a.",expr,oper) else expr;
-wg_atom_or_quote(expr) := is(atom(expr) or op(expr)="'");
+wg_make_binding(undef):=buildq([undef:undef],
+  lambda([x,y],
+    if is(y = undef) then rhs(x)
+    else funmake(":",[rhs(x),y])))$
+wg_check_op(oper,expr):=if atom(expr) or not is(op(expr) = oper)
+then error("~a: expected operand ~a.",expr,oper) else expr$
+wg_atom_or_quote(expr):=is(atom(expr) or op(expr) = "'")$
 
-(
-  with_gensyms(bindings,[body]) ::= block([vals,undef,simp:false],
-    vals:map(lambda([x],if wg_atom_or_quote(x) then undef else rhs(wg_check_op(":",x))),bindings),
+(with_gensyms(bindings,[body])::=block([vals,undef,simp:false],
+    vals:map(lambda([x],
+        if wg_atom_or_quote(x) then undef
+        else rhs(wg_check_op(":",x))),bindings),
     bindings:map(lambda([x],if atom(x) then x else lhs(x)),bindings),
     bindings:map(lambda([x],funmake("=",[x,wg_gensymize(x)])),bindings),
-    buildq([body:psubst(bindings,body),bindings:bindings,v:map(wg_make_binding(undef),bindings,vals)],
+    buildq([body:psubst(bindings,body),bindings:bindings,
+      v:map(wg_make_binding(undef),bindings,vals)],
       block(v,splice(body)))),
   /* bootstrap with_gensyms by using it to define itself! */
-  apply(with_gensyms,['[bindings,body,vals,undef,x,v],%%]))$
+  apply(with_gensyms,['([bindings,body,vals,undef,x,v]),%%]))$
 
-wg_listofvars(expr,[listvars]) := block([v,listconstvars:false,listdummyvars:true],
+wg_listofvars(expr,[listvars]):=block(
+  [v,listconstvars:false,listdummyvars:true],
   if member('listconstvars,listvars) then listconstvars:true,
   v:unique(listofvars(expr)),
-  for r in v do if not(atom(r)) then v:delete(r,v),
-  v:remove_maxima_symbols(v),
-  v)$
-wg_funargs(expr) := if atom(expr) then (errcatch(wg_funargs(first(apply('fundef,[expr])))), if %%=[] then [] else first(%%)) else wg_listofvars(expr,'listconstvars) $
+  for r in v do if not atom(r) then v:delete(r,v),
+  v:remove_maxima_symbols(v),v)$
+
+wg_funargs(expr):=if atom(expr)
+then (errcatch(wg_funargs(first(apply('fundef,[expr])))),
+  if %% = [] then [] else first(%%))
+else wg_listofvars(expr,'listconstvars)$
 
 /* substitutes for := and ::= */
 
 kill(":>","::>") $
 infix(":>",180,20) $
 infix("::>",180,20) $
-(x ::> y) ::= block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_funargs(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x::=y))) $
-(x :>  y) ::> block([simp:false], buildq([v:unique(append(wg_listofvars(x),wg_funargs(x),wg_listofvars(y))),x:x,y:y], with_gensyms(v, x :=y))) ;
+(x ::> y)::=block([simp:false],
+  buildq([v:unique(append(wg_listofvars(x),wg_funargs(x),wg_listofvars(y))),
+    x:x,y:y],with_gensyms(v,x::=y)))$
+(x :> y) ::> block([simp:false],
+  buildq([v:unique(append(wg_listofvars(x),wg_funargs(x),
+        wg_listofvars(y))),x:x,y:y],
+    with_gensyms(v,x:=y)))$
 
-(
-  wg_redefun(fun,[vars]) := block([fd],
-    fd:if atom(fun) then apply('fundef,[fun]) else if member(op(fun),[":=","::="]) then fun else error("argument must be function name or definition"),
-    if vars=[] then vars:wg_listofvars(fd),
+(wg_redefun(fun,[vars]):=block([fd],
+    fd:if atom(fun) then apply('fundef,[fun])
+    else (if member(op(fun),[":=","::="]) then fun
+      else error(
+        "argument must be function name or definition")),
+    if vars = [] then vars:wg_listofvars(fd),
     apply('with_gensyms,[flatten(append(args(lhs(fd)),vars)),fd])),
   /* bootstrap wg_redefun by using it to define itself! */
-  wg_redefun('wg_redefun,'fd));
-map(wg_redefun,'[wg_make_binding,wg_check_op,wg_atom_or_quote,"::>",wg_listofvars,wg_funargs]);
+  wg_redefun('wg_redefun,'fd))$
+map(wg_redefun,
+  '([wg_make_binding,wg_check_op,wg_atom_or_quote,"::>",wg_listofvars,
+    wg_funargs]))$
 
-wg_lambda(vars,[body]) ::> buildq([vars:vars,body:body], with_gensyms(vars,lambda(vars,splice(body)))) $
+wg_lambda(vars,[body]) ::> buildq([vars:vars,body:body],
+  with_gensyms(vars,lambda(vars,splice(body))))$
+
 alias(wg_block,with_gensyms) $
 
 /*
