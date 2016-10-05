@@ -1,7 +1,7 @@
 \input texinfo
 
 @comment $Id@w{$}
-@comment Time-stamp: <2016-07-16 17:55:19>
+@comment Time-stamp: <2016-10-05 09:26:13>
 @comment %**start of header
 
 @setfilename with_gensyms.info
@@ -122,8 +122,8 @@ understand bug.
 @c f(x,3);
 @c f(x,2);
 @c ===end===
-@example
-@end example
+@verbatim
+@end verbatim
 
 The discrepancy in behavior is due to the creation of the undeclared
 array @code{x} in @il{5}. This introduces a global property on the
@@ -137,8 +137,8 @@ symbol @code{x} that frustrates the expected behavior of @code{f}.
 @c f(x,3);
 @c f(x,2);
 @c ===end===
-@example
-@end example
+@verbatim
+@end verbatim
 
 @node Explanation, Definitions for SYMBOLS.LISP, Examples, WITH_GENSYMS
 @section Explanation
@@ -146,9 +146,9 @@ symbol @code{x} that frustrates the expected behavior of @code{f}.
 A simple cure to fix the problem encountered with @code{f} is to give
 the parameter @code{x} a more unique name. Something like
 
-@example
+@verbatim
 f(my_local_variable_x_121423412,n) := my_local_variable_x_121423412[n];
-@end example
+@end verbatim
 
 There are two obvious flaws here: 1. the code is almost unreadable; and
 2. there is nothing to prevent someone else (you, at another time) from choosing
@@ -236,21 +236,21 @@ of the gensym is not valid @maxima{} syntax.
 load(with_gensyms)$
 wg_gensymize(x);
 apply('properties,[%]);
-@end example
+@end verbatim
 
 If @var{x} already has the @code{gensym} property, return @var{x}.
 
 @maximankio
 wg_gensymize(%o2);
 is(% = %o2);
-@end example
+@end verbatim
 
 The display property of the returned gensym is governed by the variable @var{wg_reversealias}.
 
 @maximankio
 wg_gensymize(y),  wg_reversealias:false;
 lisp_print(%);
-@end example
+@end verbatim
 
 @fundef{$wg_gensymize}
 
@@ -282,7 +282,7 @@ Creates a function of two variables, @var{x} and @var{y}, where
 
 @maximankio
 map(wg_make_binding(undef), '[a:b,a:b], [undef,3]);
-@end example
+@end verbatim
 
 @end defun
 
@@ -310,7 +310,7 @@ load(with_gensyms)$
 with_gensyms([x:1, y:2],
                    ['[x,y], [x,y]]);
 with_gensyms([x,n], f(x) := a+x[n]);
-@end example
+@end verbatim
 
 Here is an implementation of a @code{lambda} function using @code{with_gensyms}:
 
@@ -326,7 +326,7 @@ wg_lambda1([x,y], if a=1 then x+1 else if a=2 then y+2 else a);
 apply(%o5,'[u,v]);
 apply(%o5,'[u,v]), a=1;
 apply(%o5,'[u,v]), a=2;
-@end example
+@end verbatim
 
 @end defmac
 
@@ -344,7 +344,7 @@ declare(π,constant) $
 f(x,y) := for i from 1 thru 10 do x+i*π*y $
 wg_listofvars(%i10);
 wg_listofvars(%i10,'listconstvars);
-@end example
+@end verbatim
 
 @end defun
 
@@ -358,7 +358,7 @@ of @code{wg_listofvars(expr, 'listconstvars)}.
 @maximankio
 wg_funargs(wg_listofvars);
 wg_funargs(lhs(%i10));
-@end example
+@end verbatim
 
 @end defun
 
@@ -373,7 +373,7 @@ wg_lambda([x,y], if a=1 then x+1 else if a=2 then y+2 else a);
 apply(%o2,'[u,v]);
 apply(%o2,'[u,v]), a=1;
 apply(%o2,'[u,v]), a=2;
-@end example
+@end verbatim
 
 @xref{with_gensyms}.
 
@@ -391,7 +391,7 @@ macroexpand(
 macroexpand(
         with_gensyms([x:b,y:4], 
         if a=1 then x+1 else if a=2 then y+2 else a));
-@end example
+@end verbatim
 
 @end defmac
 
@@ -421,6 +421,7 @@ Thanks to Robert Dodier. His code for
 * SYMBOLS.LISP::
 * WITH_GENSYMS.MAC::
 * RTEST_WITH_GENSYMS.MAC::
+* Regression Tests::
 @end menu
 
 @node SYMBOLS.LISP, WITH_GENSYMS.MAC, Code Listings, Code Listings
@@ -437,12 +438,20 @@ Thanks to Robert Dodier. His code for
 @verbatiminclude with_gensyms.mac
 @end smallformat
 
-@node RTEST_WITH_GENSYMS.MAC,  , WITH_GENSYMS.MAC, Code Listings
+@node RTEST_WITH_GENSYMS.MAC, Regression Tests, WITH_GENSYMS.MAC, Code Listings
 @section RTEST_WITH_GENSYMS.MAC
 
 @smallformat
 @verbatiminclude rtest_with_gensyms.mac
 @end smallformat
+
+@node Regression Tests,  , RTEST_WITH_GENSYMS.MAC, Code Listings
+@section Regression Tests
+
+@maximaio
+x : {1,2} $
+@end verbatim
+
 
 @node Function and Variable index, GNU Free Documentation License, Code Listings, Top
 @appendix Function and Variable index
