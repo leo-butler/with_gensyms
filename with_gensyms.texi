@@ -1,7 +1,7 @@
 \input texinfo
 
 @comment $Id@w{$}
-@comment Time-stamp: <2016-10-05 09:26:13>
+@comment Time-stamp: <2016-10-05 12:24:53>
 @comment %**start of header
 
 @setfilename with_gensyms.info
@@ -448,9 +448,13 @@ Thanks to Robert Dodier. His code for
 @node Regression Tests,  , RTEST_WITH_GENSYMS.MAC, Code Listings
 @section Regression Tests
 
-@maximaio
-x : {1,2} $
-@end verbatim
+@maximand
+ system( "maxima --init=/dev/null --batch-string='with_stdout(\"rtest_with_gensyms.txt\",batch(\"rtest_with_gensyms.mac\",test));'" );
+@end ignore
+
+@smallformat
+@verbatiminclude rtest_with_gensyms.txt
+@end smallformat
 
 
 @node Function and Variable index, GNU Free Documentation License, Code Listings, Top
