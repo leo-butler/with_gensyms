@@ -1,7 +1,7 @@
 \input texinfo
 
 @comment $Id@w{$}
-@comment Time-stamp: <2016-10-05 16:31:44>
+@comment Time-stamp: <2017-11-23 12:21:26>
 @comment %**start of header
 
 @setfilename with_gensyms.info
@@ -244,10 +244,17 @@ wg_gensymize(x);
 apply('properties,[%]);
 @end verbatim
 
-If @var{x} already has the @code{gensym} property, return @var{x}.
+By default, if @var{x} already has the @code{gensym} property, return @var{x}.
 
 @maximankio
 wg_gensymize(%o2);
+is(% = %o2);
+@end verbatim
+
+Set @code{wg_gensymize_is_idempotent} to @false{}, to return unique gensyms.
+
+@maximankio
+wg_gensymize(x), wg_gensymize_is_idempotent=false;
 is(% = %o2);
 @end verbatim
 
@@ -257,6 +264,7 @@ The display property of the returned gensym is governed by the variable @var{wg_
 wg_gensymize(y),  wg_reversealias:false;
 lisp_print(%);
 @end verbatim
+
 
 @fundef{$wg_gensymize}
 
@@ -268,6 +276,14 @@ lisp_print(%);
 
 @defopt wg_reversealias
 
+If @true{}, print symbols with the @code{gensym} property unreadably; otherwise, print readably.
+See the entry for @ref{wg_gensymize}.
+
+@end defopt
+
+@defopt wg_gensymize_is_idempotent
+
+If @true{}, @code{wg_gensymize} returns the same gensym for the same symbol; otherwise, a unique gensym is returned with each call.
 See the entry for @ref{wg_gensymize}.
 
 @end defopt
