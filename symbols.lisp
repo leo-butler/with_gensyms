@@ -19,7 +19,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this file. If not, see http://www.gnu.org/licenses/. 
 ;;
-;; Time-stamp: <2017-11-23 11:59:54>
+;; Time-stamp: <2017-11-23 12:07:54>
 
 (in-package :maxima)
 
@@ -31,6 +31,7 @@
 
 (declaim (special $symbols))
 (defmvar $wg_reversealias t)
+(defmvar $wg_gensymize_is_idempotent t)
 
 (defmfun $add_maxima_symbol (x &optional (s $symbols))
   (assert (or (symbolp x) ($listp x)))
@@ -79,10 +80,11 @@ may be a symbol or mlist of symbols."
     (cons '(mlist simp) s)))
 
 (defmfun $wg_gensymize (x)
-  (declare (special $wg_reversealias))
+  (declare (special $wg_reversealias $wg_gensymize_is_idempotent))
   (assert (symbolp x))
   ;; make function idempotent by returning a symbol produced by $wg_gensymize
-  (cond ((mfuncall '$featurep x '$gensym)
+  ;; unless $wg_gensymize_is_idempotent is nil
+  (cond ((and $wg_gensymize_is_idempotent (mfuncall '$featurep x '$gensym))
 	 x)
 	(t
 	 (let ((w (gensym (format nil "%~a_" (stripdollar x)))))
