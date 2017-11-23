@@ -19,7 +19,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this file. If not, see http://www.gnu.org/licenses/. 
 ;;
-;; Time-stamp: <2016-09-29 09:15:56>
+;; Time-stamp: <2017-11-23 11:59:54>
 
 (in-package :maxima)
 
@@ -51,7 +51,9 @@
 
 (defmfun $maxima_symbolp (x)
   (or (gethash x $symbols nil)
-      (member x (mapcar #'caar (cdr $functions)) :test #'eq)))
+      (member x (mapcar #'caar (cdr $functions)) :test #'eq)
+      (member x (mapcar #'caar (cdr $macros)) :test #'eq)))
+
 
 (defmfun $remove_maxima_symbols (x)
   (assert (listp x))
